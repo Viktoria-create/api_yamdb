@@ -1,61 +1,16 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from .validators import validate_year
-
-
-class User(AbstractUser):
-    """Пользователи сайта."""
-    ADMIN = 'admin'
-    MODERATOR = 'moderator'
-    USER = 'user'
-    ROLES = ((ADMIN, 'Administrator'),
-             (MODERATOR, 'Moderator'),
-             (USER, 'User'), )
-    email = models.EmailField(
-        name='Адрес электронной почты',
-        unique=True,)
-    username = models.CharField(
-        name='Имя пользователя',
-        max_length=100,
-        null=True,
-        unique=True)
-    role = models.CharField(
-        name='Роль',
-        max_length=50,
-        choices=ROLES,
-        default=USER)
-    bio = models.TextField(
-        name='О себе',
-        null=True,
-        blank=True)
-
-    # @property
-    def is_moderator(self):
-        return self.role == self.MODERATOR
-
-    # @property
-    def is_admin(self):
-        return self.role == self.ADMIN
-
-    # USERNAME_FIELD = 'email'
-    # REQUIRED_FIELDS = ['username']
-
-    class Meta:
-        ordering = ('id')
-        name = 'Пользователь'
-
-        # constraints = [
-        #   models.CheckConstraint(
-        #       check=~models.Q(username__iexact="me"),
-        #       name="username_is_not_me")]
+#from .validators import validate_year
+User = get_user_model()
 
 
 class Category(models.Model):
     """Категория произведения."""
     name = models.CharField(
-        name='Название',
+        verbose_name='Название',
         max_length=200)
     slug = models.SlugField(
         name='Идентификатор',
@@ -66,14 +21,14 @@ class Category(models.Model):
         return self.name
 
     class Meta:
-        name = 'Категория'
-        ordering = ('name')
+        verbose_name = 'Категория'
+        ordering = ('name',)
 
 
 class Genre(models.Model):
     """Жанр произведения."""
     name = models.CharField(
-        name='Название',
+        verbose_name='Название',
         max_length=200)
     slug = models.SlugField(
         name='Идентификатор',
@@ -84,19 +39,21 @@ class Genre(models.Model):
         return self.name
 
     class Meta:
-        name = 'Жанр'
-        ordering = ('name')
+        verbose_name = 'Жанр'
+        ordering = ('name',)
 
 
 class Title(models.Model):
     """Конкретный объкет."""
     name = models.CharField(
-        name='Название',
+        verbose_name='Название',
         max_length=200)
     year = models.IntegerField(
         name='Дата выхода',
-        validators=[validate_year])
+        #validators=[validate_year]
+        )
     description = models.TextField(
+
         name='Описание',
         null=True,
         blank=True)
@@ -106,7 +63,7 @@ class Title(models.Model):
     # through='GenreTitle')
     category = models.ForeignKey(
         Category,
-        vname='Категория',
+        name='Категория',
         on_delete=models.SET_NULL,
         related_name='titles',
         null=True)
@@ -119,8 +76,8 @@ class Title(models.Model):
         return self.name
 
     class Meta:
-        name = 'Произведение'
-        ordering = ('name')
+        verbose_name = 'Произведение'
+        ordering = ('name',)
 
 
 class Review(models.Model):
@@ -162,10 +119,10 @@ class Comment(models.Model):
         on_delete=models.CASCADE,
         related_name='comments')
     pub_date = models.DateTimeField(
-        name='Дата публикации',
+        verbose_name='Дата публикации',
         auto_now_add=True,
         db_index=True)
 
     class Meta:
-        name = 'Комментарий'
-        ordering = ['pub_date']
+        verbose_name = 'Комментарий'
+        ordering = ('pub_date',)
