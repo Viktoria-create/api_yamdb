@@ -44,7 +44,7 @@ class User(AbstractUser):
 
     class Meta:
         ordering = ('id')
-        name = 'Пользователь'
+        verbose_name = 'Пользователь'
 
         # constraints = [
         #   models.CheckConstraint(
@@ -66,7 +66,7 @@ class Category(models.Model):
         return self.name
 
     class Meta:
-        name = 'Категория'
+        verbose_name = 'Категория'
         ordering = ('name')
 
 
@@ -84,7 +84,7 @@ class Genre(models.Model):
         return self.name
 
     class Meta:
-        name = 'Жанр'
+        verbose_name = 'Жанр'
         ordering = ('name')
 
 
@@ -106,7 +106,7 @@ class Title(models.Model):
     # through='GenreTitle')
     category = models.ForeignKey(
         Category,
-        vname='Категория',
+        name='Категория',
         on_delete=models.SET_NULL,
         related_name='titles',
         null=True)
@@ -119,7 +119,7 @@ class Title(models.Model):
         return self.name
 
     class Meta:
-        name = 'Произведение'
+        verbose_name = 'Произведение'
         ordering = ('name')
 
 
@@ -167,5 +167,5 @@ class Comment(models.Model):
         db_index=True)
 
     class Meta:
-        name = 'Комментарий'
+        verbose_name = 'Комментарий'
         ordering = ['pub_date']
