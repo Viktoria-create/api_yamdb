@@ -10,10 +10,8 @@ User = get_user_model()
 class Category(models.Model):
     """Категория произведения."""
     name = models.CharField(
-        verbose_name='Название',
         max_length=200)
     slug = models.SlugField(
-        name='Идентификатор',
         max_length=50,
         unique=True)
 
@@ -28,10 +26,8 @@ class Category(models.Model):
 class Genre(models.Model):
     """Жанр произведения."""
     name = models.CharField(
-        verbose_name='Название',
         max_length=200)
     slug = models.SlugField(
-        name='Идентификатор',
         max_length=50,
         unique=True)
 
@@ -46,29 +42,22 @@ class Genre(models.Model):
 class Title(models.Model):
     """Конкретный объкет."""
     name = models.CharField(
-        verbose_name='Название',
         max_length=200)
     year = models.IntegerField(
-        name='Дата выхода',
         #validators=[validate_year]
         )
     description = models.TextField(
-
-        name='Описание',
         null=True,
         blank=True)
     genre = models.ManyToManyField(
-        Genre,
-        name='Жанр',)
+        Genre,)
     # through='GenreTitle')
     category = models.ForeignKey(
         Category,
-        name='Категория',
         on_delete=models.SET_NULL,
         related_name='titles',
         null=True)
     rating = models.IntegerField(
-        name='Рейтинг',
         null=True,
         default=None)
 
@@ -84,23 +73,23 @@ class Review(models.Model):
     """Отзывы пользователей."""
     title = models.ForeignKey(
         Title,
-        name='Произведение',
         on_delete=models.CASCADE,
         related_name='reviews')
-    text = models.TextField(
-        name='Текст',)
+    text = models.TextField()
     author = models.ForeignKey(
         User,
-        name='Автор',
         on_delete=models.CASCADE,
         related_name='reviews')
-    score = models.PositiveSmallIntegerField(
-        name='Рейтинг',
+    score = models.IntegerField(
         validators=[
-            MinValueValidator(1, 'Допустимы значения от 1 до 10'),
-            MaxValueValidator(10, 'Допустимы значения от 1 до 10')])
+            MinValueValidator(
+                limit_value=1, message='Оценка не может быть меньше 1'
+            ),
+            MaxValueValidator(
+                limit_value=10, message='Оценка не может быть больше 10'
+            )]
+    )
     pub_date = models.DateTimeField(
-        name='Дата публикации',
         auto_now_add=True,
         db_index=True)
 
@@ -109,17 +98,14 @@ class Comment(models.Model):
     """Коментарии."""
     review = models.ForeignKey(
         Review,
-        name='Отзыв',
         on_delete=models.CASCADE,
         related_name='comments')
-    text = models.TextField(name='Текст',)
+    text = models.TextField()
     author = models.ForeignKey(
         User,
-        name='Пользователь',
         on_delete=models.CASCADE,
         related_name='comments')
     pub_date = models.DateTimeField(
-        verbose_name='Дата публикации',
         auto_now_add=True,
         db_index=True)
 

@@ -33,4 +33,24 @@ class ReviewSerializer(serializers.ModelSerializer):
         ):
             raise serializers.ValidationError(
                 'Больше одного отзыва оставлять нельзя')
-        return
+        return data
+
+
+class CategorySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Category
+        fields = '__all__'
+
+
+class GenreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Genre
+        fields = '__all__'
+
+
+class TitleSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Title
+        fields = '__all__'
