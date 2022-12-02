@@ -1,10 +1,37 @@
-from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-#from .validators import validate_year
-User = get_user_model()
+
+# from .validators import validate_year
+
+
+class User(AbstractUser):
+    ADMIN = 'admin'
+    MODERATOR = 'moderator'
+    USER = 'user'
+    ROLES = (
+        (ADMIN, 'Administrator'),
+        (MODERATOR, 'Moderator'),
+        (USER, 'User'),
+    )
+    role = models.CharField(
+        max_length=50,
+        choices=ROLES,
+        default=USER
+    )
+    bio = models.TextField(
+        null=True,
+        blank=True
+    )
+
+    @property
+    def is_moderator(self):
+        return self.role == self.MODERATOR
+
+    @property
+    def is_admin(self):
+        return self.role == self.ADMIN
 
 
 class Category(models.Model):
@@ -44,22 +71,19 @@ class Title(models.Model):
     name = models.CharField(
         max_length=200)
     year = models.IntegerField(
-        #validators=[validate_year]
-        )
+        # validators=[validate_year]
+    )
     description = models.TextField(
         null=True,
         blank=True)
     genre = models.ManyToManyField(
-        Genre,)
+        Genre, )
     # through='GenreTitle')
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
         related_name='titles',
         null=True)
-    rating = models.IntegerField(
-        null=True,
-        default=None)
 
     def __str__(self):
         return self.name

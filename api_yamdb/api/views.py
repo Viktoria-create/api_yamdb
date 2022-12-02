@@ -45,7 +45,7 @@ class GenreViewSet(ListCreateDestroyViewSet):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all().annotate(rating_user=models.Count("rating",))
+    queryset = Title.objects.all().annotate(rating=Avg("reviews__score",))
     serializer_class = TitleSerializer
     #permission_classes = (IsAdminOrReadOnly,)
     filter_backends = [DjangoFilterBackend]
@@ -53,7 +53,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    #permission_classes = [IsAdminModeratorOwnerOrReadOnly]
+    permission_classes = [IsAdminModeratorOwnerOrReadOnly]
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_queryset(self):

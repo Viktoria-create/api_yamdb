@@ -105,7 +105,7 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static/'),)
 
-# AUTH_USER_MODEL = 'reviews.User'
+AUTH_USER_MODEL = 'reviews.User'
 
 # EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 
@@ -125,6 +125,6 @@ REST_FRAMEWORK = {
 
 
 SIMPLE_JWT = {
-   'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
+   'ACCESS_TOKEN_LIFETIME': timedelta(days=10),
    'AUTH_HEADER_TYPES': ('Bearer',),
 }
