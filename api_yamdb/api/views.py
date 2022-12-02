@@ -10,10 +10,14 @@ from rest_framework.response import Response
 from rest_framework import mixins, viewsets
 
 from reviews.models import Category, Genre, Review, Title, User
-# from .filters import TitlesFilter
-from .permissions import IsAdminModeratorOwnerOrReadOnly
-from .serializers import (CommentSerializer, ReviewSerializer,
-                          CategorySerializer, GenreSerializer, TitleSerializer)
+from .filters import TitlesFilter
+from .permissions import (IsAdmin, IsAdminOrReadOnly,
+                          IsAdminModeratorOwnerOrReadOnly)
+from .serializers import (CategorySerializer, CommentSerializer,
+                          GenreSerializer, ReadOnlyTitleSerializer,
+                          RegisterDataSerializer, ReviewSerializer,
+                          TitleSerializer, TokenSerializer, UserEditSerializer,
+                          UserSerializer)
 
 
 class ListCreateDestroyViewSet(mixins.ListModelMixin,
@@ -46,6 +50,35 @@ class TitleViewSet(viewsets.ModelViewSet):
     serializer_class = TitleSerializer
     #permission_classes = (IsAdminOrReadOnly,)
     filter_backends = [DjangoFilterBackend]
+    filterset_class = TitlesFilter
+
+    def get_serializer_class(self):
+        if self.action in ("retrieve", "list"):
+            return ReadOnlyTitleSerializer
+        return TitleSerializer
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    lookup_field = "username"
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    pagination_class = PageNumberPagination
+    permission_classes = (IsAdmin,)
+
+    def users_own_profile(self, request):
+        user = request.user
+        if request.method == "GET":
+            serializer = self.get_serializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        if request.method == "PATCH":
+            serializer = self.get_serializer(
+                user,
+                data=request.data,
+                partial=True)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):

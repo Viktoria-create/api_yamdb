@@ -33,6 +33,18 @@ class User(AbstractUser):
     def is_admin(self):
         return self.role == self.ADMIN
 
+    # USERNAME_FIELD = 'email'
+    # REQUIRED_FIELDS = ['username']
+
+    class Meta:
+        ordering = ('id',)
+        verbose_name = 'Пользователь'
+
+        # constraints = [
+        #   models.CheckConstraint(
+        #       check=~models.Q(username__iexact="me"),
+        #       name="username_is_not_me")]
+
 
 class Category(models.Model):
     """Категория произведения."""
