@@ -4,17 +4,21 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, permissions, status, viewsets
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAdminUser, IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework import mixins, viewsets
 
 from reviews.models import Category, Genre, Review, Title, User
-from .filters import TitlesFilter
+from .email import send_confirmation_code
+# from .filters import TitlesFilter
 from .permissions import (IsAdmin, IsAdminOrReadOnly,
                           IsAdminModeratorOwnerOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReadOnlyTitleSerializer,
-                          RegisterDataSerializer, ReviewSerializer,
+                          RegistrationSerializer, ReviewSerializer,
                           TitleSerializer, TokenSerializer, UserEditSerializer,
                           UserSerializer)
 
@@ -57,6 +61,25 @@ class TitleViewSet(viewsets.ModelViewSet):
         if self.action in ("retrieve", "list"):
             return ReadOnlyTitleSerializer
         return TitleSerializer
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def send_confirmation_code(request):
+    email = request.data.get('email')
+    if email is None:
+        message = 'Email is required'
+    else:
+        if email_is_valid(email):
+            user = get_object_or_404(User, email=email)
+            confirmation_code = default_token_generator.make_token(user)
+            generate_mail(email, confirmation_code)
+            user.confirmation_code = confirmation_code
+            message = email
+            user.save()
+        else:
+            message = 'Valid email is required'
+    return Response({'email': message})
 
 
 class UserViewSet(viewsets.ModelViewSet):
