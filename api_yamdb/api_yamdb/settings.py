@@ -1,5 +1,5 @@
+from datetime import timedelta
 import os
-# from datetime import timedelta
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 from datetime import timedelta
@@ -26,8 +26,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'djoser',
     'django_filters',
-    'reviews',
-    'api',
+    'reviews.apps.ReviewsConfig',
+    'api.apps.ApiConfig',
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -106,25 +107,28 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = (os.path.join(BASE_DIR, 'static/'),)
 
 AUTH_USER_MODEL = 'reviews.User'
+AUTH_USER_MODEL = 'reviews.User'
 
-# EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 
-# EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
+EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 
-# DEFAULT_FROM_EMAIL = 'admin@yamdb.com'
+DEFAULT_FROM_EMAIL = 'admin@yamdb.com'
 
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
-
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.'
+                                'PageNumberPagination',
+    "PAGE_SIZE": 10,
 }
 
-
 SIMPLE_JWT = {
-   'ACCESS_TOKEN_LIFETIME': timedelta(days=10),
-   'AUTH_HEADER_TYPES': ('Bearer',),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=1),
+    "AUTH_HEADER_TYPES": ("Bearer",),
 }

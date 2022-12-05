@@ -1,23 +1,30 @@
 from django.contrib.auth.tokens import default_token_generator
-from django.core.mail import send_mail
+# from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
-from rest_framework import filters, permissions, status, viewsets
+from rest_framework import filters, status, viewsets
+# permissions,
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+# IsAuthenticated, IsAdminUser
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
+# from rest_framework.views import APIView
 from rest_framework import mixins, viewsets
 
 from reviews.models import Category, Genre, Review, Title, User
-from .filters import TitlesFilter
+from .email import email_is_valid, generate_mail
+# from .filters import TitlesFilter
 from .permissions import (IsAdmin, IsAdminOrReadOnly,
                           IsAdminModeratorOwnerOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ReadOnlyTitleSerializer,
-                          RegisterDataSerializer, ReviewSerializer,
-                          TitleSerializer, TokenSerializer, UserEditSerializer,
+                          ReviewSerializer,
+                          TitleSerializer,
                           UserSerializer)
+# RegistrationizerSerial, TokenSerializer, UserEditSerializer,
 
 
 class ListCreateDestroyViewSet(mixins.ListModelMixin,
@@ -30,7 +37,7 @@ class ListCreateDestroyViewSet(mixins.ListModelMixin,
 class CategoryViewSet(ListCreateDestroyViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    #permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ("name",)
     lookup_field = "slug"
@@ -39,7 +46,7 @@ class CategoryViewSet(ListCreateDestroyViewSet):
 class GenreViewSet(ListCreateDestroyViewSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    #permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ("name",)
     lookup_field = "slug"
@@ -48,14 +55,33 @@ class GenreViewSet(ListCreateDestroyViewSet):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all().annotate(rating=Avg("reviews__score",))
     serializer_class = TitleSerializer
-    #permission_classes = (IsAdminOrReadOnly,)
+    permission_classes = (IsAdminOrReadOnly,)
     filter_backends = [DjangoFilterBackend]
-    filterset_class = TitlesFilter
+    # filterset_class = TitlesFilter
 
     def get_serializer_class(self):
         if self.action in ("retrieve", "list"):
             return ReadOnlyTitleSerializer
         return TitleSerializer
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def send_confirmation_code(request):
+    email = request.data.get('email')
+    if email is None:
+        message = 'Email is required'
+    else:
+        if email_is_valid(email):
+            user = get_object_or_404(User, email=email)
+            confirmation_code = default_token_generator.make_token(user)
+            generate_mail(email, confirmation_code)
+            user.confirmation_code = confirmation_code
+            message = email
+            user.save()
+        else:
+            message = 'Valid email is required'
+    return Response({'email': message})
 
 
 class UserViewSet(viewsets.ModelViewSet):
