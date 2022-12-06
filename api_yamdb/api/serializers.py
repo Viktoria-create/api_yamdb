@@ -66,9 +66,6 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class CategorySerializer(serializers.ModelSerializer):
 
-#  class Meta:
-#        model = Category
-#        fields = '__all__'
     class Meta:
         model = Category
         exclude = ('id',)
@@ -78,9 +75,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
-#    class Meta:
-#        model = Genre
-#        fields = '__all__'
+
     class Meta:
         model = Genre
         exclude = ('id',)
