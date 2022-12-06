@@ -120,6 +120,16 @@ def get_jwt_token(request):
         return Response({'confirmation_code': 'Wrong confirmation code'}, status=status.HTTP_400_BAD_REQUEST)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    lookup_field = 'username'
+    permission_classes = [IsAdmin]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['user__username', ]
+
+
 class APIUser(APIView):
     def get(self, request):
         if request.user.is_authenticated:
