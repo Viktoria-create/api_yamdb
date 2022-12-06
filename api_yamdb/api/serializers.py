@@ -9,25 +9,33 @@ from reviews.models import Category, Genre, Review, Title, User, Comment
 User = get_user_model()
 
 
-def get_tokens_for_user(user):
-    refresh = RefreshToken.for_user(user)
-
-    return {
-        'refresh': str(refresh),
-        'access': str(refresh.access_token),
-    }
+class SendCodeSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
 
 
-class EmailAuthSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    confirmation_code = serializers.CharField(max_length=100)
+class CheckConfirmationCodeSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
+    confirmation_code = serializers.CharField(required=True)
 
-    def validate(self, data):
-        user = get_object_or_404(
-            User, confirmation_code=data['confirmation_code'],
-            email=data['email']
-        )
-        return get_tokens_for_user(user)
+# def get_tokens_for_user(user):
+#     refresh = RefreshToken.for_user(user)
+
+#     return {
+#         'refresh': str(refresh),
+#         'access': str(refresh.access_token),
+#     }
+
+
+# class EmailAuthSerializer(serializers.Serializer):
+#     email = serializers.EmailField()
+#     confirmation_code = serializers.CharField(max_length=100)
+
+#     def validate(self, data):
+#         user = get_object_or_404(
+#             User, confirmation_code=data['confirmation_code'],
+#             email=data['email']
+#         )
+#         return get_tokens_for_user(user)
 
 
 class CommentSerializer(serializers.ModelSerializer):
