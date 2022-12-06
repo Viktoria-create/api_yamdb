@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
 from rest_framework import filters, status, viewsets
-# permissions,
+# permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 # IsAuthenticated, IsAdminUser
@@ -16,7 +16,7 @@ from rest_framework import mixins, viewsets
 
 from reviews.models import Category, Genre, Review, Title, User
 from .email import email_is_valid, generate_mail
-# from .filters import TitlesFilter
+from .filters import TitlesFilter
 from .permissions import (IsAdmin, IsAdminOrReadOnly,
                           IsAdminModeratorOwnerOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
@@ -57,7 +57,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = [DjangoFilterBackend]
-    # filterset_class = TitlesFilter
+    filterset_class = TitlesFilter
 
     def get_serializer_class(self):
         if self.action in ("retrieve", "list"):

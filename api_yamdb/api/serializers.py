@@ -1,12 +1,12 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.shortcuts import get_object_or_404
-from django.contrib.auth import get_user_model
+# from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import Category, Genre, Review, Title, User, Comment
 
 
-User = get_user_model()
+# User = get_user_model()
 
 
 def get_tokens_for_user(user):
@@ -66,19 +66,35 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class CategorySerializer(serializers.ModelSerializer):
 
+#    class Meta:
+#        model = Category
+#        fields = '__all__'
     class Meta:
         model = Category
-        fields = '__all__'
+        exclude = ('id',)
+        lookup_field = 'slug'
+        extra_kwargs = {
+            'url': {'lookup_field': 'slug'}}
 
 
 class GenreSerializer(serializers.ModelSerializer):
+#    class Meta:
+#        model = Genre
+#        fields = '__all__'
     class Meta:
         model = Genre
-        fields = '__all__'
+        exclude = ('id',)
+        lookup_field = 'slug'
+        extra_kwargs = {
+            'url': {'lookup_field': 'slug'}}
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    rating = serializers.IntegerField(read_only=True, allow_null=True)
+    # rating = serializers.IntegerField(read_only=True, allow_null=True)
+    genre = serializers.SlugRelatedField(
+        slug_field='slug', many=True, queryset=Genre.objects.all())
+    category = serializers.SlugRelatedField(
+        slug_field='slug', queryset=Category.objects.all())
 
     class Meta:
         model = Title
@@ -88,15 +104,11 @@ class TitleSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         validators=[
-            UniqueValidator(queryset=User.objects.all())
-        ],
-        required=True,
-    )
+            UniqueValidator(queryset=User.objects.all())],
+        required=True,)
     email = serializers.EmailField(
         validators=[
-            UniqueValidator(queryset=User.objects.all())
-        ]
-    )
+            UniqueValidator(queryset=User.objects.all())])
 
     class Meta:
         fields = ("username", "email", "first_name",
@@ -106,8 +118,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ReadOnlyTitleSerializer(serializers.ModelSerializer):
     rating = serializers.IntegerField(
-        source='reviews__score__avg', read_only=True
-    )
+        source='reviews__score__avg', read_only=True)
     genre = GenreSerializer(many=True)
     category = CategorySerializer()
 

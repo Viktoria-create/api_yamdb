@@ -1,5 +1,3 @@
-# из тех задания на редоке - должна быть проверка на то,
-# что год создания фильма корректный(не из будушего)
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 

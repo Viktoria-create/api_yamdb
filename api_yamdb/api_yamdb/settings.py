@@ -1,5 +1,6 @@
-from datetime import timedelta
 import os
+from datetime import timedelta
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -22,11 +23,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'djoser',
+    'rest_framework_simplejwt',
     'django_filters',
+    'djoser',
     'reviews.apps.ReviewsConfig',
     'api.apps.ApiConfig',
-    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
@@ -68,6 +69,8 @@ DATABASES = {
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 # Password validation
 
