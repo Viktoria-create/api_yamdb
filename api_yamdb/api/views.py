@@ -1,4 +1,4 @@
-from django.contrib.auth.tokens import default_token_generator
+# from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
@@ -8,19 +8,20 @@ from django.conf import settings
 
 from rest_framework import filters, status, viewsets
 # permissions,
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.decorators import api_view
+# , permission_classes
+# from rest_framework.permissions import AllowAny
 # IsAuthenticated, IsAdminUser
-from rest_framework.pagination import PageNumberPagination
+# from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import mixins, viewsets
-from rest_framework_simplejwt import AccessToken
+from rest_framework_simplejwt.tokens import AccessToken
 
 import random
 
 from reviews.models import Category, Genre, Review, Title, User
-from .email import email_is_valid, generate_mail
+# from .email import email_is_valid, generate_mail
 # from .filters import TitlesFilter
 from .permissions import (IsAdmin, IsAdminOrReadOnly,
                           IsAdminModeratorOwnerOrReadOnly)
@@ -88,6 +89,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 #         else:
 #             message = 'Valid email is required'
 #     return Response({'email': message})
+
 @api_view(['POST'])
 def send_confirmation_code(request):
     serializer = SendCodeSerializer(data=request.data)

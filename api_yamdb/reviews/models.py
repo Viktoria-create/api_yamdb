@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
@@ -6,44 +6,76 @@ from django.db import models
 # from .validators import validate_year
 
 
+# class User(AbstractUser):
+#     ADMIN = 'admin'
+#     MODERATOR = 'moderator'
+#     USER = 'user'
+#     ROLES = (
+#         (ADMIN, 'Administrator'),
+#         (MODERATOR, 'Moderator'),
+#         (USER, 'User'),
+#     )
+#     role = models.CharField(
+#         max_length=50,
+#         choices=ROLES,
+#         default=USER
+#     )
+#     bio = models.TextField(
+#         null=True,
+#         blank=True
+#     )
+
+#     @property
+#     def is_moderator(self):
+#         return self.role == self.MODERATOR
+
+#     @property
+#     def is_admin(self):
+#         return self.role == self.ADMIN
+
+#     # USERNAME_FIELD = 'email'
+#     # REQUIRED_FIELDS = ['username']
+
+#     class Meta:
+#         ordering = ('id',)
+#         verbose_name = 'Пользователь'
+
+#         # constraints = [
+#         #   models.CheckConstraint(
+#         #       check=~models.Q(username__iexact="me"),
+#         #       name="username_is_not_me")]
+
+class CustomUserManager(BaseUserManager):
+    def create_user(self, email, password=None, **kwargs):
+        user = self.model(email=email, **kwargs)
+        user.set_password(password)
+        user.save()
+        return user
+
+    def create_superuser(self, email, password, **kwargs):
+        user = self.model(email=email, is_staff=True, is_superuser=True, **kwargs)
+        user.set_password(password)
+        user.save()
+        return user
+
+
 class User(AbstractUser):
-    ADMIN = 'admin'
-    MODERATOR = 'moderator'
-    USER = 'user'
-    ROLES = (
-        (ADMIN, 'Administrator'),
-        (MODERATOR, 'Moderator'),
-        (USER, 'User'),
-    )
-    role = models.CharField(
-        max_length=50,
-        choices=ROLES,
-        default=USER
-    )
-    bio = models.TextField(
-        null=True,
-        blank=True
+    email = models.EmailField(('email address'), unique=True)
+    bio = models.TextField(max_length=300, blank=True)
+    confirmation_code = models.CharField(max_length=6, default='000000')
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []
+
+    USER_ROLE = (
+        ('user', 'user'),
+        ('moderator', 'moderator'),
+        ('admin', 'admin'),
     )
 
-    @property
-    def is_moderator(self):
-        return self.role == self.MODERATOR
+    role = models.CharField(max_length=9, choices=USER_ROLE, default='user')
 
-    @property
-    def is_admin(self):
-        return self.role == self.ADMIN
-
-    # USERNAME_FIELD = 'email'
-    # REQUIRED_FIELDS = ['username']
-
-    class Meta:
-        ordering = ('id',)
-        verbose_name = 'Пользователь'
-
-        # constraints = [
-        #   models.CheckConstraint(
-        #       check=~models.Q(username__iexact="me"),
-        #       name="username_is_not_me")]
+    objects = CustomUserManager()
 
 
 class Category(models.Model):
