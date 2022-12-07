@@ -110,8 +110,9 @@ class ReviewAdmin(ImportExportModelAdmin):
         'title',
         'text',
         'author',
-        'score',)
-    search_fields = ('pub_date',)
+        'score',
+        'pub_date')
+    search_fields = ('id', 'pub_date',)
     list_filter = ('pub_date',)
     empty_value_display = '-пусто-'
 
@@ -139,6 +140,57 @@ class TitleAdmin(ImportExportModelAdmin):
     search_fields = ('name',)
     list_filter = ('name',)
     exclude = ('genres',)
+    empty_value_display = '-пусто-'
+
+
+class UserResource(resources.ModelResource):
+
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'username',
+            'email',
+            'role',
+            'bio',)
+        #    'first_name',
+        #    'last_name',)id,username,email,role,bio,first_name,last_name
+
+
+class UsereAdmin(ImportExportModelAdmin):
+    resource_classes = [UserResource]
+    list_display = (
+        'id',
+        'username',
+        'email',
+        'role',
+        'bio',)
+    #    'first_name',
+    #    'last_name',)
+    search_fields = ('id', 'username',)
+    list_filter = ('username',)
+    empty_value_display = '-пусто-'
+
+
+class GenreTitleResource(resources.ModelResource):
+
+    class Meta:
+        model = Genre
+        fields = (
+            'id',
+            'title_id',
+            'genre_id',)
+        # Title
+
+
+class GenreTitleAdmin(ImportExportModelAdmin):
+    resource_classes = [UserResource]
+    list_display = (
+        'id',
+        'title_id',
+        'genre_id',)
+    search_fields = ('id',)
+    list_filter = ('id',)
     empty_value_display = '-пусто-'
 
 
