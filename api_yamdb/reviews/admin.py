@@ -1,26 +1,51 @@
-# from django.contrib import admin
-# from django.contrib.auth.admin import UserAdmin
-
-from .models import Category, Comment, Genre, Review, Title, User
-
-
-# admin.site.register(User, UserAdmin)
-# admin.site.register(Category)
-# admin.site.register(Genre)
-# admin.site.register(Title)
-# admin.site.register(Review)
-# admin.site.register(Comment)
 from django.contrib import admin
+from django.contrib.auth.models import Group
+from .models import User
+from django.db import models
+from reviews.models import (Category, Comment, Genre, Review, Title,
+                            User, GenreTitle)
 from django.contrib.auth.admin import UserAdmin, User
-from reviews.models import Category, Comment, Genre, Review, Title
+
 from import_export import resources
-# from import_export.fields import Field
 from import_export.admin import ImportExportModelAdmin
 
-# from django.contrib import admin
-from django.db import models
 
-# from .models import Category, Comment, Genre, Review, Title
+class UserResource(resources.ModelResource):
+
+    class Meta:
+        model = User
+        fields = (
+            'id',
+            'username',
+            'email',
+            'role',
+            'bio',
+            'first_name',
+            'last_name',
+        )
+
+
+class UserAdmin(ImportExportModelAdmin,):
+    resource_classes = [UserResource]
+    list_display = (
+        'id',
+        'username',
+        'email',
+        'role',
+        'bio',
+        'first_name',
+        'last_name',
+    )
+    search_fields = (
+        'id',
+        'role',
+        'first_name',
+        'last_name',
+        'username',
+        'email'
+    )
+    list_filter = ('username',)
+    empty_value_display = '-пусто-'
 
 
 class CategoryResource(resources.ModelResource):
@@ -48,9 +73,12 @@ class CommentResource(resources.ModelResource):
 
     class Meta:
         model = Comment
+    #    exclude = ('pub_date', )
+    #    import_id_fields = ('text',)
+    #    widgets = {'published': {'format': '%d.%m.%Y'},}
         fields = (
             'id',
-            'review',
+            'review_id',
             'text',
             'author',
             'pub_date',
@@ -61,7 +89,7 @@ class CommentAdmin(ImportExportModelAdmin):
     resource_classes = [CommentResource]
     list_display = (
         'id',
-        'review',
+        'review_id',
         'text',
         'author',
         'pub_date',
@@ -143,35 +171,6 @@ class TitleAdmin(ImportExportModelAdmin):
     empty_value_display = '-пусто-'
 
 
-class UserResource(resources.ModelResource):
-
-    class Meta:
-        model = User
-        fields = (
-            'id',
-            'username',
-            'email',
-            'role',
-            'bio',)
-        #    'first_name',
-        #    'last_name',)id,username,email,role,bio,first_name,last_name
-
-
-class UsereAdmin(ImportExportModelAdmin):
-    resource_classes = [UserResource]
-    list_display = (
-        'id',
-        'username',
-        'email',
-        'role',
-        'bio',)
-    #    'first_name',
-    #    'last_name',)
-    search_fields = ('id', 'username',)
-    list_filter = ('username',)
-    empty_value_display = '-пусто-'
-
-
 class GenreTitleResource(resources.ModelResource):
 
     class Meta:
@@ -180,11 +179,10 @@ class GenreTitleResource(resources.ModelResource):
             'id',
             'title_id',
             'genre_id',)
-        # Title
 
 
 class GenreTitleAdmin(ImportExportModelAdmin):
-    resource_classes = [UserResource]
+    resource_classes = [GenreTitleResource]
     list_display = (
         'id',
         'title_id',
@@ -194,9 +192,11 @@ class GenreTitleAdmin(ImportExportModelAdmin):
     empty_value_display = '-пусто-'
 
 
+admin.site.unregister(Group)
+admin.site.register(User, UserAdmin)
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(Genre, GenreAdmin)
 admin.site.register(Title, TitleAdmin)
+admin.site.register(GenreTitle, GenreTitleAdmin)
 admin.site.register(Review, ReviewAdmin)
 admin.site.register(Comment, CommentAdmin)
-admin.site.register(User, UserAdmin)
