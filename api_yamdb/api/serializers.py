@@ -1,33 +1,69 @@
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from django.shortcuts import get_object_or_404
-# from django.contrib.auth import get_user_model
-from rest_framework_simplejwt.tokens import RefreshToken
 from reviews.models import Category, Genre, Review, Title, User, Comment
 
 
-# User = get_user_model()
-
-
-def get_tokens_for_user(user):
-    refresh = RefreshToken.for_user(user)
-
-    return {
-        'refresh': str(refresh),
-        'access': str(refresh.access_token),
-    }
-
-
-class EmailAuthSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    confirmation_code = serializers.CharField(max_length=100)
-
-    def validate(self, data):
-        user = get_object_or_404(
-            User, confirmation_code=data['confirmation_code'],
-            email=data['email']
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = (
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "bio",
+            "role",
         )
-        return get_tokens_for_user(user)
+
+
+class ProfileEditSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = (
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "bio",
+            "role",
+        )
+        model = User
+        read_only_fields = ("role",)
+
+
+class RegistrationSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        required=True,
+        validators=[UniqueValidator(queryset=User.objects.all())])
+
+    email = serializers.EmailField(
+        required=True,
+        validators=[UniqueValidator(queryset=User.objects.all())])
+
+    class Meta:
+        model = User
+        fields = ("username", "email")
+
+    def save(self):
+        user = User(
+            username=self.validated_data["username"],
+            email=self.validated_data["email"],
+        )
+        user.save()
+        return user
+
+    def validate_username(self, value):
+        if value == "me":
+            raise serializers.ValidationError(
+                f"Использование имени {value} "
+                f"в качестве username запрещено"
+            )
+        return value
+
+
+class TokenSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+    confirmation_code = serializers.CharField(max_length=100)
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -85,7 +121,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class TitleSerializer(serializers.ModelSerializer):
-    # rating = serializers.IntegerField(read_only=True, allow_null=True)
+    rating = serializers.IntegerField(read_only=True, allow_null=True)
     genre = serializers.SlugRelatedField(
         slug_field='slug', many=True, queryset=Genre.objects.all())
     category = serializers.SlugRelatedField(
@@ -112,8 +148,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ReadOnlyTitleSerializer(serializers.ModelSerializer):
-    rating = serializers.IntegerField(
-        source='reviews__score__avg', read_only=True)
+    rating = serializers.IntegerField(read_only=True)
     genre = GenreSerializer(many=True)
     category = CategorySerializer()
 
