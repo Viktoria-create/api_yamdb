@@ -2,8 +2,10 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-
 from .validators import validate_year
+import datetime
+
+CSV_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"  # формат datetime в csv
 
 
 class User(AbstractUser):
@@ -146,6 +148,17 @@ class Review(models.Model):
         auto_now_add=True,
         db_index=True)
 
+
+@property
+def csv_pub_date(self):
+    return self.pub_date
+
+
+@csv_pub_date.setter
+def csv_pub_date(self, value):
+    if value:
+        self.pub_date = datetime.datetime.strptime(value, CSV_DATETIME_FORMAT)
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -159,15 +172,29 @@ class Comment(models.Model):
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
-        related_name='comments')
+        related_name='comments'
+    )
     text = models.TextField()
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='comments')
+        related_name='comments'
+    )
     pub_date = models.DateTimeField(
         auto_now_add=True,
-        db_index=True)
+        db_index=True
+    )
+
+
+@property
+def csv_pub_date(self):
+    return self.pub_date
+
+
+@csv_pub_date.setter
+def csv_pub_date(self, value):
+    if value:
+        self.pub_date = datetime.datetime.strptime(value, CSV_DATETIME_FORMAT)
 
     class Meta:
         verbose_name = 'Комментарий'

@@ -8,6 +8,7 @@ from django.contrib.auth.admin import UserAdmin, User
 
 from import_export import resources
 from import_export.admin import ImportExportModelAdmin
+from import_export.fields import Field
 
 
 class UserResource(resources.ModelResource):
@@ -70,18 +71,17 @@ class CategoryAdmin(ImportExportModelAdmin):
 
 class CommentResource(resources.ModelResource):
     name = models.CharField(max_length=200)
+    review_id = Field(attribute='review_id', column_name='review_id')
+    csv_pub_date = Field(attribute='pub_date', column_name='pub_date')
 
     class Meta:
         model = Comment
-    #    exclude = ('pub_date', )
-    #    import_id_fields = ('text',)
-    #    widgets = {'published': {'format': '%d.%m.%Y'},}
         fields = (
             'id',
             'review_id',
             'text',
             'author',
-            'pub_date',
+            'csv_pub_date',
         )
 
 
@@ -94,8 +94,8 @@ class CommentAdmin(ImportExportModelAdmin):
         'author',
         'pub_date',
     )
-    search_fields = ('review',)
-    list_filter = ('review',)
+    search_fields = ('review_id',)
+    list_filter = ('review_id',)
     empty_value_display = '-пусто-'
 
 
@@ -120,15 +120,17 @@ class GenreAdmin(ImportExportModelAdmin):
 
 
 class ReviewResource(resources.ModelResource):
+    review_id = Field(attribute='review_id', column_name='review_id')
+    csv_pub_date = Field(attribute='pub_date', column_name='pub_date')
 
     class Meta:
         model = Review
         fields = ('id',
-                  'title_id',
+                  'title',
                   'text',
                   'author',
                   'score',
-                  'pub_date',)
+                  'csv_pub_date',)
 
 
 class ReviewAdmin(ImportExportModelAdmin):
@@ -178,7 +180,8 @@ class GenreTitleResource(resources.ModelResource):
         fields = (
             'id',
             'title_id',
-            'genre_id',)
+            'genre_id',
+        )
 
 
 class GenreTitleAdmin(ImportExportModelAdmin):
@@ -186,7 +189,8 @@ class GenreTitleAdmin(ImportExportModelAdmin):
     list_display = (
         'id',
         'title_id',
-        'genre_id',)
+        'genre_id',
+    )
     search_fields = ('id',)
     list_filter = ('id',)
     empty_value_display = '-пусто-'
