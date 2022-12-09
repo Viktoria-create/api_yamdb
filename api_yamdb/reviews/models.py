@@ -24,7 +24,7 @@ class User(AbstractUser):
         max_length=150,
         null=True,
         unique=True,
-        validators=(validate_username),
+        validators=(validate_username,),
     )
     role = models.CharField(
         max_length=50,
@@ -128,20 +128,23 @@ class GenreTitle(models.Model):
         return f'{self.title}, жанр - {self.genre}'
 
 
-class PubDate(models.Model):
+class DatePubText(models.Model):
     pub_date = models.DateTimeField(
         auto_now_add=True,
         db_index=True,
     )
+    text = models.TextField()
+
+    class Meta:
+        abstract = True
 
 
-class Review(PubDate):
+class Review(DatePubText):
     """Отзывы пользователей."""
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
         related_name='reviews')
-    text = models.TextField()
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -156,50 +159,49 @@ class Review(PubDate):
             )]
     )
 
-
-@property
-def csv_pub_date(self):
-    return self.pub_date
-
-
-@csv_pub_date.setter
-def csv_pub_date(self, value):
-    if value:
-        self.pub_date = datetime.datetime.strptime(value, CSV_DATETIME_FORMAT)
-
+#    class Meta:
+#        constraints = [
+#            models.UniqueConstraint(
+#                fields=['author', 'title'],
+#                name='unique_review')
+#        ]
     class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=('title', 'author',),
-                name='unique review'
-            )]
+        unique_together = ('author', 'title',)
+
+    @property
+    def csv_pub_date(self):
+        return self.pub_date
+
+    @csv_pub_date.setter
+    def csv_pub_date(self, value):
+        if value:
+            self.pub_date = datetime.datetime.strptime(
+                value, CSV_DATETIME_FORMAT)
 
 
-class Comment(PubDate):
+class Comment(DatePubText):
     """Коментарии."""
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
         related_name='comments'
     )
-    text = models.TextField()
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='comments'
     )
 
-
-@property
-def csv_pub_date(self):
-    return self.pub_date
-
-
-@csv_pub_date.setter
-def csv_pub_date(self, value):
-    if value:
-        self.pub_date = datetime.datetime.strptime(value, CSV_DATETIME_FORMAT)
-
     class Meta:
         verbose_name = 'Комментарий'
         ordering = ('pub_date',)
+
+    @property
+    def csv_pub_date(self):
+        return self.pub_date
+
+    @csv_pub_date.setter
+    def csv_pub_date(self, value):
+        if value:
+            self.pub_date = datetime.datetime.strptime(value,
+                                                       CSV_DATETIME_FORMAT)

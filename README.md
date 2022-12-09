@@ -105,7 +105,7 @@ Users
 
 импорт csv-файлов
 
-python manage.py import_csv
+pip install django-import-export
 
 
 Над проектом работали:
