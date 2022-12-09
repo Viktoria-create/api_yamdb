@@ -3,7 +3,7 @@ from rest_framework.routers import DefaultRouter
 
 from .views import (CategoryViewSet, CommentViewSet, GenreViewSet,
                     ReviewViewSet, TitleViewSet, UserViewSet,
-                    email_verifications, self_registration)
+                    APIToken, APIRegistration)
 
 
 router_v1 = DefaultRouter()
@@ -18,8 +18,8 @@ router_v1.register(r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)'
 router_v1.register('users', UserViewSet)
 
 auth_patterns = [
-    path('signup/', self_registration, name="self_registration"),
-    path('token/', email_verifications, name="email_verifications"),
+    path('signup/', APIRegistration, name="self_registration"),
+    path('token/', APIToken, name="email_verifications"),
 ]
 
 

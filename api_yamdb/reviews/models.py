@@ -23,7 +23,7 @@ class User(AbstractUser):
     username = models.CharField(
         max_length=150,
         null=True,
-        unique=True
+        unique=True,
     )
     role = models.CharField(
         max_length=50,

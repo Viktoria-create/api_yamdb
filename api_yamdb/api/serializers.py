@@ -30,38 +30,52 @@ class ProfileEditSerializer(serializers.ModelSerializer):
         read_only_fields = ("role",)
 
 
-class RegistrationSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(
-        required=True,
-        validators=[UniqueValidator(queryset=User.objects.all())])
-
-    email = serializers.EmailField(
-        required=True,
-        validators=[UniqueValidator(queryset=User.objects.all())])
+class RegistrationSerializer(serializers.Serializer):
+    username = serializers.CharField(required=True)
+    email = serializers.EmailField(required=True)
 
     class Meta:
         model = User
         fields = ("username", "email")
 
-    def save(self):
-        user = User(
-            username=self.validated_data["username"],
-            email=self.validated_data["email"],
-        )
-        user.save()
-        return user
+    # def save(self):
+    #     user = User(
+    #         username=self.validated_data["username"],
+    #         email=self.validated_data["email"],
+    #     )
+    #     user.save()
+    #     return user
 
     def validate_username(self, value):
-        if value == "me":
+        allowed_symbols = r'[a-zA-Z0-9,.;:_\s-]'
+        if value == 'me' and value not in allowed_symbols:
             raise serializers.ValidationError(
                 f"Использование имени {value} "
                 f"в качестве username запрещено"
+            )
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError(
+                {
+                    'username':
+                    'Пользователь с данным username уже зарегистрирован.'
+                },
+            )
+        return value
+
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise serializers.ValidationError(
+                {
+                    'email':
+                    'Пользователь с данным email уже зарегистрирован.'
+                },
             )
         return value
 
 
 class TokenSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=150)
+    username = serializers.CharField(max_length=150,
+        validators=[UniqueValidator(queryset=User.objects.all())])
     confirmation_code = serializers.CharField(max_length=100)
 
 

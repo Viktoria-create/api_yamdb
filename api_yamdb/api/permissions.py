@@ -5,11 +5,11 @@ User = get_user_model()
 
 
 class IsAdmin(permissions.BasePermission):
-    allowed_user_roles = ('admin', )
+    allowed_user_roles = ('admin',)
 
     def has_permission(self, request, view):
-        return request.user.is_authenticated and (
-            request.user.is_admin or request.user.is_superuser)
+        return request.user.is_superuser or (request.user.is_authenticated and
+            request.user.is_admin)
 
 
 class IsAnonim(permissions.BasePermission):
@@ -22,36 +22,25 @@ class IsUser(permissions.BasePermission):
     allowed_user_roles = ('user', )
 
     def has_permission(self, request, view):
-        if request.user.is_authenticated:
-            if request.user.role in self.allowed_user_roles:
-                return True
-        return False
+        request.user.role in self.allowed_user_roles
 
 
 class IsModerator(permissions.BasePermission):
     allowed_user_roles = ('moderator', )
 
     def has_permission(self, request, view):
-        if request.user.is_authenticated:
-            if request.user.role in self.allowed_user_roles:
-                return True
-        return False
+        request.user.role in self.allowed_user_roles
 
 
 class IsOwner(permissions.BasePermission):
+
     def has_object_permission(self, request, view, obj):
-        if request.user.is_authenticated:
-            return obj.author == request.user
-        else:
-            return False
+        obj.author == request.user
 
 
 class IsAdminUserOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        else:
-            return request.user.is_staff
+        return request.method in permissions.SAFE_METHODS or request.user.is_staff
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):

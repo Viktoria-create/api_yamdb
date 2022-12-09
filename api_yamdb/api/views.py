@@ -7,6 +7,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, status, viewsets
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework import mixins, viewsets
@@ -89,48 +90,98 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(["POST"])
-@permission_classes([AllowAny])
-def self_registration(request):
-    if request.method == "POST":
+class APIRegistration(APIView):
+    def post(self, request):
         serializer = RegistrationSerializer(data=request.data)
-        data = {}
-        if not serializer.is_valid():
-            return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST
+        if serializer.is_valid():
+            username = serializer.data['username']
+            email = serializer.data['email']
+            user, created = User.objects.get_or_create(
+                username=username,
+                email=email,
             )
-        else:
-            user = serializer.save()
-            data["email"] = user.email
-            data["username"] = user.username
-            code = default_token_generator.make_token(user)
-            send_mail(
-                subject="yamdb registrations",
-                message=f"Пользователь {user.username} успешно"
-                f"зарегистрирован.\n"
-                f"Код подтверждения: {code}",
-                from_email=None,
-                recipient_list=[user.email],
-            )
-        return Response(data, status=status.HTTP_200_OK)
-
-
-@api_view(["POST"])
-@permission_classes([AllowAny])
-def email_verifications(request):
-    serializer = TokenSerializer(data=request.data)
-    data = {}
-    if not serializer.is_valid():
+            serializer.save()
+            if created is True:
+                token = default_token_generator.make_token(user)
+                User.objects.filter(username=username).update(
+                    code=token, is_active=True
+                )
+                send_mail(token, email)
+                return Response({'email': email, 'username': username})
+            else:
+                token = default_token_generator.make_token(user)
+                User.objects.filter(username=username).update(code=token)
+                send_mail(token, email)
+                return Response({'email': email, 'username': username})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    user = get_object_or_404(
-        User, username=serializer.validated_data["username"]
-    )
-    code = serializer.validated_data["confirmation_code"]
-    if default_token_generator.check_token(user, code):
-        token = AccessToken.for_user(user)
-        data["token"] = str(token)
-        return Response(data, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class APIToken(APIView):
+    def post(self, request):
+        serializer = TokenSerializer(data=request.data)
+        if serializer.is_valid():
+            user = get_object_or_404(
+                User,
+                username=self.request.data['username']
+            )
+            token = self.request.data['confirmation_code']
+            check_token = default_token_generator.check_token(user, token)
+            if check_token is True:
+                User.objects.filter(
+                    username=self.request.data['username']
+                ).update(is_active=True)
+            if check_token is False:
+                return Response(
+                    {'message': 'Код не прошёл проверку!'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            return Response(
+                {'token': f'{AccessToken.for_user(user)}'},
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# @api_view(["POST"])
+# @permission_classes([AllowAny])
+# def self_registration(request):
+#     if request.method == "POST":
+#         serializer = RegistrationSerializer(data=request.data)
+#         data = {}
+#         if not serializer.is_valid():
+#             return Response(
+#                 serializer.errors, status=status.HTTP_400_BAD_REQUEST
+#             )
+#         else:
+#             user = serializer.save()
+#             data["email"] = user.email
+#             data["username"] = user.username
+#             code = default_token_generator.make_token(user)
+#             send_mail(
+#                 subject="yamdb registrations",
+#                 message=f"Пользователь {user.username} успешно"
+#                 f"зарегистрирован.\n"
+#                 f"Код подтверждения: {code}",
+#                 from_email=None,
+#                 recipient_list=[user.email],
+#             )
+#         return Response(data, status=status.HTTP_200_OK)
+
+
+# @api_view(["POST"])
+# @permission_classes([AllowAny])
+# def email_verifications(request):
+#     serializer = TokenSerializer(data=request.data)
+#     data = {}
+#     if not serializer.is_valid():
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#     user = get_object_or_404(
+#         User, username=serializer.validated_data["username"]
+#     )
+#     code = serializer.validated_data["confirmation_code"]
+#     if default_token_generator.check_token(user, code):
+#         token = AccessToken.for_user(user)
+#         data["token"] = str(token)
+#         return Response(data, status=status.HTTP_200_OK)
+#     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
