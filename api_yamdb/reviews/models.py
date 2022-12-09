@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from .validators import validate_year
+from .validators import validate_year, validate_username
 import datetime
 
 CSV_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"  # формат datetime в csv
@@ -24,6 +24,7 @@ class User(AbstractUser):
         max_length=150,
         null=True,
         unique=True,
+        validators=(validate_username,),
     )
     role = models.CharField(
         max_length=50,
@@ -36,12 +37,16 @@ class User(AbstractUser):
     )
 
     @property
+    def is_admin(self):
+        return self.role == self.ADMIN
+
+    @property
     def is_moderator(self):
         return self.role == self.MODERATOR
 
     @property
-    def is_admin(self):
-        return self.role == self.ADMIN
+    def is_user(self):
+        return self.role == self.USER
 
     class Meta:
         ordering = ('id',)
@@ -56,12 +61,12 @@ class Category(models.Model):
         max_length=50,
         unique=True)
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         verbose_name = 'Категория'
         ordering = ('name',)
+
+    def __str__(self):
+        return self.name
 
 
 class Genre(models.Model):
@@ -72,12 +77,12 @@ class Genre(models.Model):
         max_length=50,
         unique=True)
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         verbose_name = 'Жанр'
         ordering = ('name',)
+
+    def __str__(self):
+        return self.name
 
 
 class Title(models.Model):
@@ -98,12 +103,12 @@ class Title(models.Model):
         related_name='titles',
         null=True)
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         verbose_name = 'Произведение'
         ordering = ('name',)
+
+    def __str__(self):
+        return self.name
 
 
 class GenreTitle(models.Model):
@@ -116,21 +121,30 @@ class GenreTitle(models.Model):
         verbose_name='Жанр',
         on_delete=models.CASCADE)
 
+    class Meta:
+        verbose_name = 'Произведение и жанр'
+
     def __str__(self):
         return f'{self.title}, жанр - {self.genre}'
 
+
+class DatePubText(models.Model):
+    pub_date = models.DateTimeField(
+        auto_now_add=True,
+        db_index=True,
+    )
+    text = models.TextField()
+
     class Meta:
-        verbose_name = 'Произведение и жанр'
-        verbose_name_plural = 'Произведения и жанры'
+        abstract = True
 
 
-class Review(models.Model):
+class Review(DatePubText):
     """Отзывы пользователей."""
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
         related_name='reviews')
-    text = models.TextField()
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -144,58 +158,50 @@ class Review(models.Model):
                 limit_value=10, message='Оценка не может быть больше 10'
             )]
     )
-    pub_date = models.DateTimeField(
-        auto_now_add=True,
-        db_index=True)
 
-
-@property
-def csv_pub_date(self):
-    return self.pub_date
-
-
-@csv_pub_date.setter
-def csv_pub_date(self, value):
-    if value:
-        self.pub_date = datetime.datetime.strptime(value, CSV_DATETIME_FORMAT)
-
+#    class Meta:
+#        constraints = [
+#            models.UniqueConstraint(
+#                fields=['author', 'title'],
+#                name='unique_review')
+#        ]
     class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=('title', 'author',),
-                name='unique review'
-            )]
+        unique_together = ('author', 'title',)
+
+    @property
+    def csv_pub_date(self):
+        return self.pub_date
+
+    @csv_pub_date.setter
+    def csv_pub_date(self, value):
+        if value:
+            self.pub_date = datetime.datetime.strptime(
+                value, CSV_DATETIME_FORMAT)
 
 
-class Comment(models.Model):
+class Comment(DatePubText):
     """Коментарии."""
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
         related_name='comments'
     )
-    text = models.TextField()
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name='comments'
     )
-    pub_date = models.DateTimeField(
-        auto_now_add=True,
-        db_index=True
-    )
-
-
-@property
-def csv_pub_date(self):
-    return self.pub_date
-
-
-@csv_pub_date.setter
-def csv_pub_date(self, value):
-    if value:
-        self.pub_date = datetime.datetime.strptime(value, CSV_DATETIME_FORMAT)
 
     class Meta:
         verbose_name = 'Комментарий'
         ordering = ('pub_date',)
+
+    @property
+    def csv_pub_date(self):
+        return self.pub_date
+
+    @csv_pub_date.setter
+    def csv_pub_date(self, value):
+        if value:
+            self.pub_date = datetime.datetime.strptime(value,
+                                                       CSV_DATETIME_FORMAT)
