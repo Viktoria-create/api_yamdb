@@ -5,6 +5,7 @@ from .views import (CategoryViewSet, CommentViewSet, GenreViewSet,
                     ReviewViewSet, TitleViewSet, UserViewSet,
                     APISignup, APIGetToken,)
 
+
 # email_verifications, self_registration,
 
 router_v1 = DefaultRouter()
@@ -23,6 +24,8 @@ auth_patterns = [
     path('token/', APIGetToken.as_view({'get': 'list'}), name='apigettoken'),
     # path('signup/', self_registration, name="self_registration"),
     # path('token/', email_verifications, name="email_verifications"),
+    # path('signup/', APIRegistration, name="self_registration"),
+    # path('token/', APIToken, name="email_verifications"),
 ]
 
 

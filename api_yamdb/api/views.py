@@ -10,7 +10,6 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework import mixins, viewsets
-from rest_framework.decorators import action
 # api_view, permission_classes,
 
 from reviews.models import Category, Genre, Review, Title, User
@@ -19,10 +18,11 @@ from .permissions import (IsAdmin, IsAdminOrReadOnly,
                           IsAdminModeratorOwnerOrReadOnly)
 from .serializers import (CategorySerializer, CommentSerializer,
                           GenreSerializer, ProfileEditSerializer,
-                          ReadOnlyTitleSerializer, RegistrationSerializer,
+                          ReadOnlyTitleSerializer,
                           ReviewSerializer,
                           TitleSerializer, TokenSerializer,
                           UserSerializer)
+#  RegistrationSerializer,
 
 
 class ListCreateDestroyViewSet(mixins.ListModelMixin,
