@@ -159,12 +159,6 @@ class Review(DatePubText):
             )]
     )
 
-#    class Meta:
-#        constraints = [
-#            models.UniqueConstraint(
-#                fields=['author', 'title'],
-#                name='unique_review')
-#        ]
     class Meta:
         unique_together = ('author', 'title',)
 

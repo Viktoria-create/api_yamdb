@@ -125,12 +125,14 @@ class ReviewResource(resources.ModelResource):
 
     class Meta:
         model = Review
-        fields = ('id',
-                  'title',
-                  'text',
-                  'author',
-                  'score',
-                  'csv_pub_date',)
+        fields = (
+            'id',
+            'title',
+            'text',
+            'author',
+            'score',
+            'csv_pub_date',
+        )
 
 
 class ReviewAdmin(ImportExportModelAdmin):
@@ -141,7 +143,8 @@ class ReviewAdmin(ImportExportModelAdmin):
         'text',
         'author',
         'score',
-        'pub_date')
+        'pub_date'
+    )
     search_fields = ('id', 'pub_date',)
     list_filter = ('pub_date',)
     empty_value_display = '-пусто-'
@@ -156,7 +159,8 @@ class TitleResource(resources.ModelResource):
             'name',
             'year',
             'category',
-            'description',)
+            'description',
+        )
 
 
 class TitleAdmin(ImportExportModelAdmin):
@@ -166,7 +170,8 @@ class TitleAdmin(ImportExportModelAdmin):
         'name',
         'year',
         'category',
-        'description',)
+        'description',
+    )
     search_fields = ('name',)
     list_filter = ('name',)
     exclude = ('genres',)
