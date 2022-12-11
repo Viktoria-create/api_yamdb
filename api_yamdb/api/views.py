@@ -103,7 +103,8 @@ class APIGetToken(APIView):
             return Response(
                 {'username': 'Пользователь не найден!'},
                 status=status.HTTP_404_NOT_FOUND)
-        if default_token_generator.check_token(user, data['confirmation_code']):
+        if default_token_generator.check_token(user,
+                                               data['confirmation_code']):
             token = AccessToken.for_user(user)
             return Response(
                 {'token': token},
