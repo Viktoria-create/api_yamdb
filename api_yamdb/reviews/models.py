@@ -41,9 +41,9 @@ class User(AbstractUser):
     def is_admin(self):
         return (
             self.role == self.ADMIN
-            or self.is_superuser
-            or self.is_staff
-        )
+            or self.is_superuser)
+        #    or self.is_staff
+        # )
 
     @property
     def is_moderator(self):
@@ -58,8 +58,8 @@ class User(AbstractUser):
         verbose_name = 'Пользователь'
 
 
-class Category(models.Model):
-    """Категория произведения."""
+class CategoryGenre(models.Model):
+    """Категория и жанр произведения."""
     name = models.CharField(
         max_length=200
     )
@@ -69,6 +69,13 @@ class Category(models.Model):
     )
 
     class Meta:
+        abstract = True
+
+
+class Category(CategoryGenre):
+    """Категория произведения."""
+
+    class Meta:
         verbose_name = 'Категория'
         ordering = ('name',)
 
@@ -76,15 +83,8 @@ class Category(models.Model):
         return self.name
 
 
-class Genre(models.Model):
+class Genre(CategoryGenre):
     """Жанр произведения."""
-    name = models.CharField(
-        max_length=200
-    )
-    slug = models.SlugField(
-        max_length=50,
-        unique=True
-    )
 
     class Meta:
         verbose_name = 'Жанр'

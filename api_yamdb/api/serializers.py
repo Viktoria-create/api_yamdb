@@ -1,8 +1,6 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import validate_email
-# from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator, ValidationError
+from rest_framework.validators import ValidationError
 from reviews.models import Category, Comment, Genre, Review, Title
 from reviews.validators import username_validate
 
@@ -24,10 +22,10 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
     def validate_username(self, value):
-        try:
-            username_validate(value)
-        except ValidationError as error:
-            raise ValidationError(error)
+        if value == 'me':
+            raise serializers.ValidationError(
+                "Имя пользователя не может быть 'me'."
+            )
         return value
 
     def validate(self, data):
@@ -54,10 +52,10 @@ class ProfileEditSerializer(serializers.ModelSerializer):
         read_only_fields = ('role',)
 
     def validate_username(self, value):
-        try:
-            username_validate(value)
-        except ValidationError as error:
-            raise ValidationError(error)
+        if value == 'me':
+            raise serializers.ValidationError(
+                "Имя пользователя не может быть 'me'."
+            )
         return value
 
 
@@ -69,10 +67,10 @@ class GetTokenSerializer(serializers.ModelSerializer):
     confirmation_code = serializers.CharField(required=True)
 
     def validate_username(self, value):
-        try:
-            username_validate(value)
-        except ValidationError as error:
-            raise ValidationError(error)
+        if value == 'me':
+            raise serializers.ValidationError(
+                "Имя пользователя не может быть 'me'."
+            )
         return value
 
     class Meta:
@@ -83,25 +81,44 @@ class GetTokenSerializer(serializers.ModelSerializer):
         )
 
 
-class SignUpSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(
-        required=True,
-        validators=(
-            username_validate,
-            UniqueValidator(queryset=User.objects.all())
-        )
-    )
+class SignUpSerializer(serializers.Serializer):
+    # serializers.ModelSerializer
+    # username = serializers.CharField(
+    #    required=True,)
+    #    validators=(
+    #        username_validate,))
+    #        UniqueValidator(queryset=User.objects.all())
+    #    )
+    # )
+
+    email = serializers.EmailField()
+    username = serializers.CharField(max_length=150)
+
+    def validate_username(self, name):
+        if name == 'me':
+            raise serializers.ValidationError(
+                    "Имя пользователя не может быть 'me'."
+                )
+        return name
+
+    def validate(self, data):
+        username = data.get('username')
+        email = data.get('email')
+        if (
+            User.objects.filter(username=username).exists()
+            and User.objects.get(username=username).email != email
+        ):
+            raise serializers.ValidationError("Пользователь существует!")
+        if (
+            User.objects.filter(email=email).exists()
+            and User.objects.get(email=email).username != username
+        ):
+            raise serializers.ValidationError("Емайл существует!")
+        return data
 
     class Meta:
         model = User
         fields = ('username', 'email')
-
-    def validate_email(self, value):
-        try:
-            validate_email(value)
-        except ValidationError as error:
-            raise ValidationError(error)
-        return value
 
 
 class CommentSerializer(serializers.ModelSerializer):
