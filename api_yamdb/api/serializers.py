@@ -82,23 +82,14 @@ class GetTokenSerializer(serializers.ModelSerializer):
 
 
 class SignUpSerializer(serializers.Serializer):
-    # serializers.ModelSerializer
-    # username = serializers.CharField(
-    #    required=True,)
-    #    validators=(
-    #        username_validate,))
-    #        UniqueValidator(queryset=User.objects.all())
-    #    )
-    # )
-
     email = serializers.EmailField()
     username = serializers.CharField(max_length=150)
 
     def validate_username(self, name):
         if name == 'me':
             raise serializers.ValidationError(
-                    "Имя пользователя не может быть 'me'."
-                )
+                "Имя пользователя не может быть 'me'."
+            )
         return name
 
     def validate(self, data):
