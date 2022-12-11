@@ -128,7 +128,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         if (
             current_user.reviews.filter(title=title_id).exists()
             and self.context['request'].method == 'POST'
-           ):
+        ):
             raise serializers.ValidationError(
                 'Больше одного отзыва оставлять нельзя.'
             )
