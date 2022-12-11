@@ -1,12 +1,13 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import validate_email
-from django.utils.translation import ugettext_lazy as _
+# from django.utils.translation import ugettext_lazy as _
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator, ValidationError
 from reviews.models import Category, Comment, Genre, Review, Title
 from reviews.validators import username_validate
 
 User = get_user_model()
+
 
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(required=True)
@@ -28,11 +29,11 @@ class UserSerializer(serializers.ModelSerializer):
         except ValidationError as error:
             raise ValidationError(error)
         return value
-    
+
     def validate(self, data):
         if self.context['request'].POST:
             sources = list(User.objects.values('username', 'email'))
-            for item in sources:              
+            for item in sources:
                 for field in set(item.items()):
                     if field in set(data.items()):
                         raise ValidationError('error')
@@ -63,7 +64,7 @@ class ProfileEditSerializer(serializers.ModelSerializer):
 class GetTokenSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         required=True,
-        validators=(username_validate,)    
+        validators=(username_validate,)
     )
     confirmation_code = serializers.CharField(required=True)
 
@@ -85,11 +86,10 @@ class GetTokenSerializer(serializers.ModelSerializer):
 class SignUpSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         required=True,
-        validators=(
-        username_validate,
-        UniqueValidator(queryset=User.objects.all())
-        )
-    )
+        validators=(username_validate,
+                    UniqueValidator(queryset=User.objects.all())
+                    )
+                )
 
     class Meta:
         model = User
