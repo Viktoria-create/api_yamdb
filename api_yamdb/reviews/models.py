@@ -1,11 +1,12 @@
+import datetime
+
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from .validators import validate_year, validate_username
-import datetime
+from .validators import username_validate, validate_year
 
-CSV_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"  # формат datetime в csv
+CSV_DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%fZ"
 
 
 class User(AbstractUser):
@@ -18,13 +19,13 @@ class User(AbstractUser):
         (USER, 'User'),
     )
     email = models.EmailField(
-        unique=True,
+        unique=True
     )
     username = models.CharField(
         max_length=150,
         null=True,
         unique=True,
-        validators=(validate_username,),
+        validators=(username_validate,)
     )
     role = models.CharField(
         max_length=50,
@@ -38,7 +39,11 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.role == self.ADMIN
+        return (
+            self.role == self.ADMIN
+            or self.is_superuser
+            or self.is_staff
+        )
 
     @property
     def is_moderator(self):
@@ -56,10 +61,12 @@ class User(AbstractUser):
 class Category(models.Model):
     """Категория произведения."""
     name = models.CharField(
-        max_length=200)
+        max_length=200
+    )
     slug = models.SlugField(
         max_length=50,
-        unique=True)
+        unique=True
+    )
 
     class Meta:
         verbose_name = 'Категория'
@@ -72,10 +79,12 @@ class Category(models.Model):
 class Genre(models.Model):
     """Жанр произведения."""
     name = models.CharField(
-        max_length=200)
+        max_length=200
+    )
     slug = models.SlugField(
         max_length=50,
-        unique=True)
+        unique=True
+    )
 
     class Meta:
         verbose_name = 'Жанр'
@@ -86,22 +95,28 @@ class Genre(models.Model):
 
 
 class Title(models.Model):
-    """Конкретный объкет."""
+    """Конкретный объект."""
     name = models.CharField(
-        max_length=200)
+        max_length=200
+    )
     year = models.IntegerField(
-        validators=[validate_year]
+        validators=(validate_year,)
     )
     description = models.TextField(
         null=True,
-        blank=True)
+        blank=True
+    )
     genre = models.ManyToManyField(
-        Genre,)
+        Genre,
+        verbose_name='Жанр',
+        through='GenreTitle'
+    )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
         related_name='titles',
-        null=True)
+        null=True
+    )
 
     class Meta:
         verbose_name = 'Произведение'
@@ -115,11 +130,13 @@ class GenreTitle(models.Model):
     title = models.ForeignKey(
         Title,
         verbose_name='Произведение',
-        on_delete=models.CASCADE)
+        on_delete=models.CASCADE
+    )
     genre = models.ForeignKey(
         Genre,
         verbose_name='Жанр',
-        on_delete=models.CASCADE)
+        on_delete=models.CASCADE
+    )
 
     class Meta:
         verbose_name = 'Произведение и жанр'
@@ -144,23 +161,26 @@ class Review(DatePubText):
     title = models.ForeignKey(
         Title,
         on_delete=models.CASCADE,
-        related_name='reviews')
+        related_name='reviews'
+    )
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='reviews')
+        related_name='reviews'
+    )
     score = models.IntegerField(
-        validators=[
+        validators=(
             MinValueValidator(
                 limit_value=1, message='Оценка не может быть меньше 1'
             ),
             MaxValueValidator(
                 limit_value=10, message='Оценка не может быть больше 10'
-            )]
+            )
+        )
     )
 
     class Meta:
-        unique_together = ('author', 'title',)
+        unique_together = ('author', 'title')
 
     @property
     def csv_pub_date(self):
@@ -174,7 +194,7 @@ class Review(DatePubText):
 
 
 class Comment(DatePubText):
-    """Коментарии."""
+    """Комментарии."""
     review = models.ForeignKey(
         Review,
         on_delete=models.CASCADE,
