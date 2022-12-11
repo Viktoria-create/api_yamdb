@@ -86,10 +86,11 @@ class GetTokenSerializer(serializers.ModelSerializer):
 class SignUpSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         required=True,
-        validators=(username_validate,
-                    UniqueValidator(queryset=User.objects.all())
-                    )
-                )
+        validators=(
+            username_validate,
+            UniqueValidator(queryset=User.objects.all())
+        )
+    )
 
     class Meta:
         model = User
@@ -124,8 +125,10 @@ class ReviewSerializer(serializers.ModelSerializer):
     def validate(self, data):
         current_user = self.context['request'].user
         title_id = self.context['view'].kwargs.get('title_id')
-        if (current_user.reviews.filter(title=title_id).exists() and
-                self.context['request'].method == 'POST'):
+        if (
+            current_user.reviews.filter(title=title_id).exists()
+            and self.context['request'].method == 'POST'
+           ):
             raise serializers.ValidationError(
                 'Больше одного отзыва оставлять нельзя.'
             )
